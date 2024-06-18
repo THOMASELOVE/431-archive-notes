@@ -1,0 +1,189 @@
+# Types of Data
+
+## Setup: Packages Used Here
+
+```{r, message = FALSE}
+knitr::opts_chunk$set(comment = NA)
+
+library(janitor)
+library(gtsummary)
+library(kableExtra)
+library(tidyverse)
+
+theme_set(theme_bw())
+```
+
+We'll also use the `describe()` function from the `psych` package in what follows, but I won't load the whole `psych` package here.
+
+## Data require structure and context
+
+**Descriptive statistics** are concerned with the presentation, organization and summary of data, as suggested in @Norman-Streiner. This includes various methods of organizing and graphing data to get an idea of what those data can tell us.
+
+As @Vittinghoff suggest, the nature of the measurement determines how best to describe it statistically, and the main distinction is between **numerical** and **categorical** variables. Even this is a little tricky - plenty of data can have values that look like numerical values, but are just numerals serving as labels.
+
+As @BockVD point out, the truly critical notion, of course, is that data values, no matter what kind, are useless without their contexts. The Five W's (Who, What \[and in what units\], When, Where, Why, and often How) are just as useful for establishing the context of data as they are in journalism. If you can't answer Who and What, in particular, you don't have any useful information.
+
+In general, each row of a data frame corresponds to an individual (respondent, experimental unit, record, or observation) about whom some characteristics are gathered in columns (and these characteristics may be called variables, factors or data elements.) Every column / variable should have a name that indicates *what* it is measuring, and every row / observation should have a name that indicates *who* is being measured.
+
+## Reading in the "Complete Cases" Sample
+
+Let's begin by loading into the `nh_500cc` tibble the information from the `nh_adult500cc.Rds` file we created in @sec-nh_cc. Notice that I am simplifying the name of the tibble, to save me some typing.
+
+```{r}
+nh_500cc <- read_rds("data/nh_adult500cc.Rds")
+```
+
+One obvious hurdle we'll avoid for the moment is what to do about missing data, since the `nh_500cc` data are specifically drawn from complete responses. Working with complete cases only can introduce bias to our estimates and visualizations, so it will be necessary in time to address what we should do when a complete-case analysis isn't a good choice. We'll return to this issue later.
+
+## Quantitative Variables
+
+Variables recorded in numbers that we use as numbers are called **quantitative**. Familiar examples include incomes, heights, weights, ages, distances, times, and counts. All quantitative variables have measurement units, which tell you how the quantitative variable was measured. Without units (like miles per hour, angstroms, yen or degrees Celsius) the values of a quantitative variable have no meaning.
+
+-   It does little good to be told the price of something if you don't know the currency being used.
+
+-   You might be surprised to see someone whose age is 72 listed in a database on childhood diseases until you find out that age is measured in months.
+
+-   Often just seeking the units can reveal a variable whose definition is challenging - just how do we measure "friendliness", or "success," for example.
+
+-   Quantitative variables may also be classified by whether they are **continuous** or can only take on a **discrete** set of values. Continuous data may take on any value, within a defined range. Suppose we are measuring height. While height is really continuous, our measuring stick usually only lets us measure with a certain degree of precision. If our measurements are only trustworthy to the nearest centimeter with the ruler we have, we might describe them as discrete measures. But we could always get a more precise ruler. The measurement divisions we make in moving from a continuous concept to a discrete measurement are usually fairly arbitrary. Another way to think of this, if you enjoy music, is that, as suggested in @Norman-Streiner, a piano is a *discrete* instrument, but a violin is a *continuous* one, enabling finer distinctions between notes than the piano is capable of making. Sometimes the distinction between continuous and discrete is important, but usually, it's not.
+
+## Quantitative Variables in `nh_500cc`
+
+Here's a list of the variables contained in our `nh_500cc` tibble.
+
+```{r}
+names(nh_500cc)
+```
+
+The `nh_500cc` data includes seven quantitative variables, including `Age`, `Height`, `Weight`, `BMI`, `SBP`, `DBP` and `Pulse`.
+
+-   We know these are quantitative variables because they have units:
+    -   `Age` in years, `Height` in centimeters, `Weight` in kilograms,
+    -   `BMI` in kg/m^2^, the `BP` measurements in mm Hg, and `Pulse` in beats per minute.
+
+Let's summarize them with the `describe()` function from the `psych` package.
+
+```{r}
+nh_500cc |>
+  select(Age, Height, Weight, BMI, SBP, DBP, Pulse) |>
+  psych::describe() |>
+  kbl() |>
+  kable_styling()
+```
+
+As an alternative, we could use `tbl_summary()` from the `gtsummary` package, as well. The approach below works nicely for producing a mean, standard deviation, and five-number summary for each of the variables we've identified as quantitative.
+
+-   Quantitative variables lend themselves to many of the summaries we will discuss, like means, quantiles, and our various measures of spread, like the standard deviation or inter-quartile range. They also have at least a chance to follow the Normal distribution.
+
+```{r}
+nh_500cc |>
+  select(Age, Height, Weight, BMI, SBP, DBP, Pulse) |>
+  tbl_summary( statistic = list(all_continuous() ~ "{mean} ({sd}): 
+                     [ {min}, {p25}, {median}, {p75}, {max} ]")) 
+```
+
+### A look at BMI (Body-Mass Index)
+
+The definition of BMI (*body-mass index*) for adult subjects (which is expressed in units of kg/m^2^) is:
+
+$$
+\mbox{Body Mass Index} = \frac{\mbox{weight in kg}}{(\mbox{height in meters})^2} = 703 \times \frac{\mbox{weight in pounds}}{(\mbox{height in inches})^2}
+$$
+
+> \[BMI is essentially\] ... a measure of a person's *thinness* or *thickness*... BMI was designed for use as a simple means of classifying average sedentary (physically inactive) populations, with an average body composition. For these individuals, the current value recommendations are as follow: a BMI from 18.5 up to 25 may indicate optimal weight, a BMI lower than 18.5 suggests the person is underweight, a number from 25 up to 30 may indicate the person is overweight, and a number from 30 upwards suggests the person is obese.
+>
+> Wikipedia, https://en.wikipedia.org/wiki/Body_mass_index
+
+### Types of Quantitative Variables
+
+Depending on the context, we would likely treat most of these quantitative variables as *discrete* given that are measurements are fairly crude (this is certainly true for `Age`, measured in years) although BMI is probably *continuous* in most settings, even though it is a function of two other measures (`Height` and `Weight`) which are rounded off to integer numbers of centimeters and kilograms, respectively.
+
+It is also possible to separate out quantitative variables into **ratio** variables or **interval** variables.
+
+-   An interval variable has equal distances between values, but the zero point is arbitrary.
+-   A ratio variable has equal intervals between values, and a meaningful zero point.
+
+For example, weight is an example of a ratio variable, while IQ is an example of an interval variable. We all know what zero weight is. An intelligence score like IQ is a different matter. We say that the average IQ is 100, but that's only by convention. We could just as easily have decided to add 400 to every IQ value and make the average 500 instead. Because IQ's intervals are equal, the difference between and IQ of 70 and an IQ of 80 is the same as the difference between 120 and 130. However, an IQ of 100 is not twice as high as an IQ of 50. The point is that if the zero point is artificial and movable, then the differences between numbers are meaningful but the ratios between them are not.
+
+On the other hand, most lab test values are ratio variables, as are physical characteristics like height and weight. Each of the quantitative variables in our `nh_500cc` data can be thought of as a ratio variable.A person who weighs 100 kg is twice as heavy as one who weighs 50 kg; even when we convert kg to pounds, this is still true. For the most part, we can treat and analyze interval or ratio variables the same way.
+
+## Qualitative (Categorical) Variables
+
+**Qualitative** or categorical variables consist of names of categories. These names may be numerical, but the numbers (or names) are simply codes to identify the groups or categories into which the individuals are divided. Categorical variables with two categories, like yes or no, up or down, or, more generally, 1 and 0, are called **binary** variables. Those with more than two-categories are sometimes called **multi-categorical** variables.
+
+In the `nh_500cc` data, we have eight categorical variables, four binary and four with multiple categories.
+
+```{r}
+nh_500cc |>
+  select(Sex, PhysActive, Smoke100, SleepTrouble,
+         Race, Education, MaritalStatus, HealthGen) |>
+  summary()
+```
+
+### Nominal vs. Ordinal Categories
+
+-   When the categories included in a variable are merely names, and come in no particular order, we sometimes call them **nominal** variables. The most important summary of such a variable is usually a table of frequencies, and the mode becomes an important single summary, while the mean and median are essentially useless.
+
+In the `nh_500cc` data, `Race` is a nominal variable with multiple unordered categories. So is `MaritalStatus`.
+
+-   The alternative categorical variable (where order matters) is called **ordinal**, and includes variables that are sometimes thought of as falling right in between quantitative and qualitative variables.
+
+Examples of ordinal multi-categorical variables in the `nh_500cc` data include the Education and HealthGen variables.
+
+-   Answers to questions like "How is your overall physical health?" with available responses Excellent, Very Good, Good, Fair or Poor, which are often coded as 1-5, certainly provide a perceived *order*, but a group of people with average health status 4 (Very Good) is not necessarily twice as healthy as a group with average health status of 2 (Fair).
+
+-   Sometimes we treat the values from ordinal variables as sufficiently scaled to permit us to use quantitative approaches like means, quantiles, and standard deviations to summarize and model the results, and at other times, we'll treat ordinal variables as if they were nominal, with tables and percentages our primary tools.
+
+-   Note that all binary variables may be treated as either ordinal, or nominal.
+
+Binary variables in the `nh_500cc` data include `Sex`, `PhysActive`, `Smoke100`, `SleepTrouble`. Each can be thought of as either ordinal or nominal.
+
+Lots of variables may be treated as either quantitative or qualitative, depending on how we use them. For instance, we usually think of age as a quantitative variable, but if we simply use age to make the distinction between "child" and "adult" then we are using it to describe categorical information. Just because your variable's values are numbers, don't assume that the information provided is quantitative.
+
+## Tabulating Binary Variables
+
+Note how the `tbl_summary()` approach works with binary variables, and in particular with variables coded Yes and No, like `PhysActive`, `Smoke100` and `SleepTrouble`.
+
+```{r}
+nh_500cc |>
+  select(Sex, PhysActive, Smoke100, SleepTrouble) |>
+  tbl_summary()
+```
+
+We can also summarize any particular variable with the `tabyl()` function from the `janitor` package.
+
+```{r}
+nh_500cc |>
+  tabyl(Sex)
+```
+
+Or, we can make a basic cross-tabulation of two binary variables, like this:
+
+```{r}
+nh_500cc |>
+  tabyl(PhysActive, Smoke100) |>
+  adorn_title()
+```
+
+## Tabulating Multi-Categorical Variables
+
+```{r}
+nh_500cc |>
+  select(Race, Education, MaritalStatus, HealthGen) |>
+  tbl_summary()
+```
+
+We can also use `tabyl()` to look at combinations of multi-categorical variables, whether they are ordinal or nominal.
+
+```{r}
+nh_500cc |>
+  tabyl(Education, HealthGen) |>
+  adorn_totals(where = c("row", "col")) |>
+  adorn_title() |>
+  kbl(align = 'lrrrrrc') |>
+  kable_styling(full_width = FALSE)
+```
+
+## Coming Up
+
+Next, we'll look at several additional approaches to building tabular and graphical summaries for these data, beyond the ideas provided here.
