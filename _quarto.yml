@@ -3,12 +3,20 @@ project:
   output-dir: docs
 
 book:
+<<<<<<< HEAD
   title: "Archived Course Notes for 431, version 2023"
+=======
+  title: "Course Notes for 431"
+>>>>>>> 176e082ef5d4a44ec2b9700c751173759deab47d
   author: "Thomas E. Love, Ph.D."
   date: last-modified
   reader-mode: true
   search: true
+<<<<<<< HEAD
   downloads: [pdf]
+=======
+  downloads: [pdf, epub]
+>>>>>>> 176e082ef5d4a44ec2b9700c751173759deab47d
   output-file: "431-notes"
   chapters:
     - index.qmd
