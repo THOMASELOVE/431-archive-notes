@@ -576,3 +576,4 @@ This is just a small piece of the toolbox for visualizations that we'll create i
 -   Building "small multiples" of plots with faceting
 
 Good data visualizations make it easy to see the data, and `ggplot2`'s tools make it relatively difficult to make a really bad graph.
+
